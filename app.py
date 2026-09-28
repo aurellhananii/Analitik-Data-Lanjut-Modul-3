@@ -13,7 +13,7 @@ st.write("Aplikasi Analitik Data Lanjut")
 
 @st.cache_data
 def load_data():
-    return pd.read_csv("data.csv")
+    return pd.read_csv("pddikti_example.csv")
 
 try:
     data = load_data()
@@ -64,32 +64,40 @@ elif halaman == "Visualisasi":
 
     st.header("Visualisasi Data")
 
-    kolom_numerik = data.select_dtypes(
-        include=["int64", "float64"]
-    ).columns.tolist()
+    # Pilih universitas
+    daftar_universitas = data["universitas"].unique()
 
-    if len(kolom_numerik) == 0:
+    universitas_pilih = st.selectbox(
+        "Pilih universitas:",
+        daftar_universitas
+    )
 
-        st.warning("Tidak ada data numerik.")
+    # Filter data berdasarkan universitas
+    data_filter = data[
+        data["universitas"] == universitas_pilih
+    ]
 
-    else:
+    # Membuat grafik
+    fig = px.line(
+        data_filter,
+        x="semester",
+        y="jumlah",
+        color="program_studi",
+        markers=True,
+        title=f"Visualisasi Data untuk {universitas_pilih}"
+    )
 
-        kolom = st.selectbox(
-            "Pilih kolom:",
-            kolom_numerik
-        )
+    fig.update_layout(
+        xaxis_title="Semester",
+        yaxis_title="Jumlah",
+        legend_title="Program Studi"
+    )
 
-        fig = px.line(
-            data,
-            y=kolom,
-            markers=True,
-            title=f"Tren {kolom}"
-        )
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
 
-        st.plotly_chart(
-            fig,
-            use_container_width=True
-        )
 
 # =========================
 # FORM INPUT
