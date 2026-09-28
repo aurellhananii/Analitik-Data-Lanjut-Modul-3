@@ -72,14 +72,14 @@ elif halaman == "Visualisasi":
         data["universitas"] == universitas_pilih
     ].copy()
 
-    # Mengambil tahun dari kolom semester
+    # Ambil tahun dari kolom semester
     data_filter["tahun"] = data_filter["semester"].str.extract(
         r"(\d{4})"
     ).astype(int)
 
-    # Urutkan semester dari tahun terbaru ke tahun terlama
+    # Urutkan dari tahun terbaru ke tahun terlama
     data_filter = data_filter.sort_values(
-        "tahun",
+        by="tahun",
         ascending=False
     )
 
@@ -88,8 +88,8 @@ elif halaman == "Visualisasi":
         x="semester",
         y="jumlah",
         color="program_studi",
-        markers=True,
-        title=f"Visualisasi Data untuk {universitas_pilih}"
+        title=f"Visualisasi Data untuk {universitas_pilih}",
+        color_discrete_sequence=["#636EFA", "#F2C744"]
     )
 
     fig.update_layout(
