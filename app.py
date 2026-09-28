@@ -1,88 +1,134 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import mysql.connector
+import plotly.express as px
 
-# 1. Fungsi Koneksi ke Database MySQL
-def get_connection():
-    connection = mysql.connector.connect(
-        host='localhost',
-        user='root',
-        password='',
-        database='db_dal'
+st.set_page_config(
+    page_title="Analitik Data Lanjut",
+    page_icon="📊",
+    layout="wide"
+)
+
+st.title("Streamlit Simple App")
+st.write("Aplikasi Analitik Data Lanjut")
+
+@st.cache_data
+def load_data():
+    return pd.read_csv("data.csv")
+
+try:
+    data = load_data()
+except Exception as e:
+    st.error("File data.csv tidak ditemukan.")
+    st.write(e)
+    st.stop()
+
+st.sidebar.title("Pilih Halaman")
+
+halaman = st.sidebar.radio(
+    "Pilih:",
+    ["Dataset", "Visualisasi", "Form Input"]
+)
+
+# =========================
+# DATASET
+# =========================
+
+if halaman == "Dataset":
+
+    st.header("Dataset")
+
+    st.dataframe(
+        data,
+        use_container_width=True
     )
-    return connection
 
-# 2. Fungsi Mengambil Data dari DB
-def get_data_from_db():
-    conn = get_connection()
-    query = "SELECT * FROM pddikti_example"
-    df = pd.read_sql(query, conn)
-    conn.close()
-    return df
+    col1, col2 = st.columns(2)
 
-# Judul Aplikasi
-st.title('Streamlit Simple App')
+    with col1:
+        st.metric(
+            "Jumlah Baris",
+            data.shape[0]
+        )
 
-# Sidebar Navigasi (Cukup panggil satu kali di sini)
-page = st.sidebar.radio("Pilih Halaman", ["Dataset", "Visualisasi", "Form Input"])
+    with col2:
+        st.metric(
+            "Jumlah Kolom",
+            data.shape[1]
+        )
 
-# Ambil Data dari Database
-data = get_data_from_db()
+# =========================
+# VISUALISASI
+# =========================
 
-# Halaman 1: Dataset
-if page == "Dataset":
-    st.header("Halaman Dataset")
-    st.dataframe(data)
+elif halaman == "Visualisasi":
 
-# Halaman 2: Visualisasi
-elif page == "Visualisasi":
-    st.header("Halaman Visualisasi")
-    
-    # Dropdown Pilih Universitas
-    list_univ = data['universitas'].unique()
-    selected_univ = st.selectbox("Pilih Universitas", list_univ)
-    
-    # Filter Data berdasarkan Universitas yang dipilih
-    filtered_data = data[data['universitas'] == selected_univ]
-    
-    # Membuat Line Chart Visualisasi Data
-    fig, ax = plt.subplots(figsize=(10, 5))
-    
-    for prodi in filtered_data['program_studi'].unique():
-        prodi_data = filtered_data[filtered_data['program_studi'] == prodi]
-        ax.plot(prodi_data['semester'], prodi_data['jumlah'], label=prodi)
-        
-    ax.set_title(f"Visualisasi Data untuk {selected_univ}")
-    ax.set_xlabel("Semester")
-    ax.set_ylabel("Jumlah")
-    plt.xticks(rotation=90)
-    ax.legend()
-    
-    # Tampilkan Grafik
-    st.pyplot(fig)
+    st.header("Visualisasi Data")
 
-# Halaman 3: Form Input
-elif page == "Form Input":
-    st.header("Halaman Form Input")
-    
-    # Membuat Form dan Tombol Submit dalam satu blok
-    with st.form(key='input_form'):
-        input_semester = st.text_input('Semester')
-        input_jumlah = st.number_input('Jumlah', min_value=0, format='%d')
-        input_program_studi = st.text_input('Program Studi')
-        input_universitas = st.text_input('Universitas')
-        submit_button = st.form_submit_button(label='Submit Data')
+    kolom_numerik = data.select_dtypes(
+        include=["int64", "float64"]
+    ).columns.tolist()
 
-        # Logika ketika tombol submit ditekan
-        if submit_button:
-            conn = get_connection()
-            cursor = conn.cursor()
-            query = """
-            INSERT INTO pddikti_example(semester, jumlah, program_studi, universitas)
-            VALUES (%s, %s, %s, %s)
-            """
-            cursor.execute(query, (input_semester, input_jumlah, input_program_studi, input_universitas))
-            conn.commit()
-            conn.close()
-            st.success("Data successfully submitted to the database!")
+    if len(kolom_numerik) == 0:
+
+        st.warning("Tidak ada data numerik.")
+
+    else:
+
+        kolom = st.selectbox(
+            "Pilih kolom:",
+            kolom_numerik
+        )
+
+        fig = px.line(
+            data,
+            y=kolom,
+            markers=True,
+            title=f"Tren {kolom}"
+        )
+
+        st.plotly_chart(
+            fig,
+            use_container_width=True
+        )
+
+# =========================
+# FORM INPUT
+# =========================
+
+elif halaman == "Form Input":
+
+    st.header("Form Input Data")
+
+    st.write("Masukkan data baru.")
+
+    kolom_numerik = data.select_dtypes(
+        include=["int64", "float64"]
+    ).columns.tolist()
+
+    if len(kolom_numerik) > 0:
+
+        with st.form("form_input"):
+
+            nilai = {}
+
+            for kolom in kolom_numerik:
+
+                nilai[kolom] = st.number_input(
+                    f"{kolom}",
+                    value=0.0
+                )
+
+            submit = st.form_submit_button(
+                "Tambah Data"
+            )
+
+        if submit:
+
+            data_baru = pd.DataFrame([nilai])
+
+            st.success("Data berhasil ditambahkan!")
+
+            st.dataframe(
+                data_baru,
+                use_container_width=True
+            )
