@@ -61,23 +61,17 @@ if halaman == "Dataset":
 # =========================
 
 elif halaman == "Visualisasi":
-
-    st.header("Visualisasi Data")
-
-    # Pilih universitas
-    daftar_universitas = data["universitas"].unique()
+    st.header("Halaman Visualisasi")
 
     universitas_pilih = st.selectbox(
-        "Pilih universitas:",
-        daftar_universitas
+        "Pilih Universitas",
+        data["universitas"].unique()
     )
 
-    # Filter data berdasarkan universitas
     data_filter = data[
         data["universitas"] == universitas_pilih
     ]
 
-    # Membuat grafik
     fig = px.line(
         data_filter,
         x="semester",
@@ -85,12 +79,6 @@ elif halaman == "Visualisasi":
         color="program_studi",
         markers=True,
         title=f"Visualisasi Data untuk {universitas_pilih}"
-    )
-
-    fig.update_layout(
-        xaxis_title="Semester",
-        yaxis_title="Jumlah",
-        legend_title="Program Studi"
     )
 
     st.plotly_chart(
