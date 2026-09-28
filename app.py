@@ -70,7 +70,18 @@ elif halaman == "Visualisasi":
 
     data_filter = data[
         data["universitas"] == universitas_pilih
-    ]
+    ].copy()
+
+    # Mengambil tahun dari kolom semester
+    data_filter["tahun"] = data_filter["semester"].str.extract(
+        r"(\d{4})"
+    ).astype(int)
+
+    # Urutkan semester dari tahun terbaru ke tahun terlama
+    data_filter = data_filter.sort_values(
+        "tahun",
+        ascending=False
+    )
 
     fig = px.line(
         data_filter,
@@ -79,6 +90,12 @@ elif halaman == "Visualisasi":
         color="program_studi",
         markers=True,
         title=f"Visualisasi Data untuk {universitas_pilih}"
+    )
+
+    fig.update_layout(
+        xaxis_title="Semester",
+        yaxis_title="Jumlah",
+        legend_title="Program Studi"
     )
 
     st.plotly_chart(
