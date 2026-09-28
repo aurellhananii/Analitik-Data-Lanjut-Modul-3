@@ -72,15 +72,15 @@ elif halaman == "Visualisasi":
         data["universitas"] == universitas_pilih
     ].copy()
 
-    # Ambil tahun dari kolom semester
+    # Ambil tahun dari semester
     data_filter["tahun"] = data_filter["semester"].str.extract(
         r"(\d{4})"
     ).astype(int)
 
-    # Urutkan dari tahun terbaru ke tahun terlama
+    # Tahun lama → tahun baru
     data_filter = data_filter.sort_values(
         by="tahun",
-        ascending=False
+        ascending=True
     )
 
     fig = px.line(
